@@ -1,0 +1,2 @@
+finish heap
+add module handling to loader and physicalMemoryManager

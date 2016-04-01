@@ -1,0 +1,27 @@
+/*+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    partial cstdlib
+
+    George Robertson
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
+#ifndef _CSTDLIB_
+#define _CSTDLIB_
+
+#include <cstddef>
+
+#ifndef NULL
+#define NULL 0
+#endif // NULL
+
+namespace std
+{
+
+extern int      abs(int);
+extern long     labs(long);
+extern char*    itoa(int value, char *str, int radix);
+extern char*    utoa(unsigned value, char *str, int radix);
+extern void     qsort ( void * base, size_t num, size_t size, int ( * comparator ) ( const void *, const void * ) );
+
+}   // namespace std
+
+#endif /* _CSTDLIB_ */

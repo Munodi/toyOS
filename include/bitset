@@ -1,0 +1,75 @@
+#ifndef _BITSET_
+#define _BITSET_
+
+#include <cstdint>
+#include <cstddef>
+#include <cstring>
+
+namespace std
+{
+
+template <std::size_t N>
+class bitset
+{
+    public:
+        bitset(){ memset(_array, 0, (N/32) + 1); }
+
+        bitset<N>& set ( std::size_t pos )
+        {
+            std::size_t index = pos / 32;
+            std::size_t offset = pos % 32;
+            _array[index] |= (1 << offset);
+            return *this;
+        }
+
+        bitset<N>& set()
+        {
+            for(std::size_t i = 0; i < N; i++)
+                set(i);
+            return *this;
+        }
+
+        bitset<N>& reset(){ memset(_array, 0, (N/32) + 1); return *this;}
+
+        bitset<N>& reset(std::size_t pos)
+        {
+            std::size_t index = pos / 32;
+            std::size_t offset = pos % 32;
+            _array[index] &= ~(1 << offset);
+            return *this;
+        }
+
+        bool test ( std::size_t pos ) const
+        {
+            std::size_t index = pos / 32;
+            std::size_t offset = pos % 32;
+            return _array[index] & (1 << offset);
+        }
+
+        std::size_t _find_first_on()
+        {
+            for(std::size_t i = 0; i < N; i++)
+            {
+                if(test(i))
+                    return i;
+            }
+            return -1;
+        }
+
+        std::size_t _find_first_off()
+        {
+            for(std::size_t i = 0; i < N; i++)
+            {
+                if(!test(i))
+                    return i;
+            }
+            return -1;
+        }
+
+    private:
+        std::uint32_t _array[(N / 32) + 1];
+};
+
+}   // namespace std
+
+#endif /* _BITSET_ */

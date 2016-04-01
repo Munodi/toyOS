@@ -1,0 +1,7 @@
+#ifndef _ARCH_X64_MEMORY_LAYOUT_HPP_
+#define _ARCH_X64_MEMORY_LAYOUT_HPP_
+
+
+
+
+#endif // _ARCH_X64_MEMORY_LAYOUT_HPP_

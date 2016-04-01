@@ -1,0 +1,23 @@
+/*+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    partial cstring
+
+    George Robertson
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
+#ifndef _CSTRING_
+#define _CSTRING_
+
+#include <cstdlib>
+
+namespace std
+{
+
+extern size_t   strlen(const char *s);
+extern int      strcmp(const char *, const char *);
+extern void     *memset(void *, int, std::size_t);
+extern void     *memcpy(void *dest, const void *src, std::size_t n);
+extern int       memcmp(const void * s1, const void * s2, std::size_t n);
+
+}   // namespace std
+
+#endif /* _CSTDLIB_ */

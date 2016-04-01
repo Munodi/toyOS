@@ -1,0 +1,23 @@
+The job of initrd is to make a single task and address space, parse
+the file until it finds the master server and initialise the master
+server.The master server will the use IPC to map the initrd file into
+its address space while taking it out of the microkernel's heap.
+
+The master server then takes over, creating tasks for the vfs, pm, mm,
+clock and tty servers.
+
+Throughout the microkernel and servers a virtualAddressSpace is refered to
+by the CR3 (in x86 terms) value it stores.
+
+The only system calls that an application should make are related to
+message passing, actually simple calls such as getpid are handled by
+the kernel as it knows the current process' pid.
+
+The process information and contexts are stored in the kernel but are
+manipulated through basic system calls by the servers.
+Files are not handled by the kernel though.
+
+System call paths:
+getpid -> system call, kernel knows the current process' pid
+exit -> message to pm. pm sends signal/message type thing to all _threads_(not process as only one thread might read the message queue), pm waits EXIT_ALLOWED_TIME or until all threads have closed. If all threads haven't finished it flushed all buffers, messages the vfs server to close its files and ends all the remaining threads. It then messages the mm which deletes the address space of the closed program.
+kill -> same as exit except it waits less time and takes a pid as an argument so a server can kill another task.

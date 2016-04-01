@@ -1,0 +1,38 @@
+#ifndef _VECTOR_
+#define _VECTOR_
+#include <cstdlib>
+
+namespace std
+{
+    template <class T>
+    class vector
+    {
+        public:
+            explicit vector()
+            {
+                _reservedSpace = NULL;
+                reserved = 0;
+                allocated = 0;
+            }
+            explicit vector(std::size_t n, const T& value= T());
+
+            void reserve(std::size_t size)
+            {
+                if(size <= reserved)    return;
+                T* newRegion = new T[size];
+                // TODO finish
+            }
+
+
+
+        private:
+            T* _reservedSpace;
+            size_t reserved;
+            size_t allocated;
+
+
+    };
+
+}   // namespace std
+
+#endif  // _VECTOR_

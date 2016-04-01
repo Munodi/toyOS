@@ -1,0 +1,37 @@
+/*+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    partial cstddef
+
+    George Robertson
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
+
+
+#ifndef _CSTDDEF_
+#define _CSTDDEF_
+
+namespace std
+{
+
+#if defined(__SIZE_TYPE__)
+    typedef __SIZE_TYPE__ size_t;
+#else
+    #error "__SIZE_TYPE__ is not defined."
+#endif
+
+#if __SIZEOF_SIZE_T__ == __SIZEOF_INT__
+    typedef signed int ssize_t;
+#elif __SIZEOF_SIZE_T__ == __SIZEOF_LONG__
+    typedef signed long ssize_t;
+#elif __SIZEOF_SIZE_T__ == __SIZEOF_SHORT__
+    typedef signed short ssize_t;
+#else
+    #error "unable to typedef ssize_t"
+#endif
+
+}   // namespace std
+
+#ifndef NULL
+#define NULL 0
+#endif // NULL
+
+#endif /* _CSTDDEF_ */

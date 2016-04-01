@@ -1,0 +1,15 @@
+#ifndef _TOYOS_CONFIG_HPP_
+#define _TOYOS_CONFIG_HPP_
+
+//#define MULTICORE
+#define UNICORE
+
+#ifdef MULTICORE
+    #define MAXIMUM_LOGICAL_PROCESSORS 32
+#else
+    #define MAXIMUM_LOGICAL_PROCESSORS 1
+#endif
+
+#define KILL_ALLOWED_TIME 30
+
+#endif // _TOYOS_CONFIG_HPP_

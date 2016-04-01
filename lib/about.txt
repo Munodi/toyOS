@@ -1,0 +1,4 @@
+minimilist standard C library
+the headers are in ../include
+a function only makes it in here when the kernel needs it, eg. I'm unlikely to need psuedo-random numbers so srand() & rand() don't make it in here.
+currently supported functions: abs, labs, strlen, memcpy.
