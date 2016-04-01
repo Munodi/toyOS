@@ -1,5 +1,5 @@
 // Copied from the Public Domain C Library (PDCLib). r519
-#include <string.h>
+#include <cstring>
 
 namespace std
 {

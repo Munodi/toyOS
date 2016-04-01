@@ -4,6 +4,9 @@
 *.bin
 *.pyo
 *.pyc
+isodir
+*.iso
+*.img
 
 # Output log files #
 ####################

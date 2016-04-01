@@ -55,8 +55,13 @@ updateinitrd:
 	@rm -f initrd
 
 update:
-	@echo Updating floppy image
-	(cd scripts; ./update_floppy.sh)
+	#@echo Updating floppy image
+	#(cd scripts; ./update_floppy.sh)
+	@echo Updating iso
+	mkdir -p isodir/boot/grub
+	cp kernel.bin isodir/boot/kernel.bin
+	cp scripts/grub.cfg isodir/boot/grub/grub.cfg
+	grub-mkrescue -o toyOS.iso isodir
 
 strip:
 	strip kernel.bin

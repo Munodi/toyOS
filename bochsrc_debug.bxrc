@@ -1,8 +1,10 @@
 megs: 64
-floppya: 1_44="floppy.img", status=inserted
-boot: floppy
+#floppya: 1_44="floppy.img", status=inserted
+ata0: enabled=1, ioaddr1=0x1f0, ioaddr2=0x3f0, irq=14
+ata0-master: type=cdrom, path="toyOS.iso", status=inserted, biosdetect=auto, model="Generic 1234"
+boot: cdrom#, floppy
 log: bochsout.txt
-clock: sync=realtime
-cpu: ips=1000000
-magic_break: enabled=1
+clock: sync=slowdown
+cpu: ips=10000000
 display_library: sdl, options="gui_debug"
+magic_break: enabled=1

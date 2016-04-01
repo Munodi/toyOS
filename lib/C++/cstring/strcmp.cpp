@@ -1,6 +1,6 @@
 /* note: taken from PDCLIB, thanks for this great library */
 
-#include <string.h>
+#include <cstring>
 namespace std
 {
 	int strcmp( const char * s1, const char * s2 )

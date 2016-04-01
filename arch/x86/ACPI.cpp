@@ -1,5 +1,4 @@
 #include <toyOS/arch/x86/ACPI.hpp>
-#include <string.h>
 #include <toyOS/bootTerminal.hpp>
 
 void findRSDP()
