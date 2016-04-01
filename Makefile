@@ -19,7 +19,7 @@ ifeq ($(TARGET),x86)
 	LD=~/opt/cross/bin/i686-elf-ld
 	CFLAGS= -O2 -I./include -nostdlib -fno-builtin -Wall -Wextra -Dx86
 	CXXFLAGS= -O2 -I./include -nostdlib -fno-builtin -Wall -Wextra -fno-exceptions -fno-rtti -Dx86
-	LDFLAGS=-Ti686.ld
+	LDFLAGS=-Tarch/$(TARGET)/i686.ld
 	ASFLAGS=-felf32 -Ox -Dx86
 endif
 
@@ -29,7 +29,7 @@ ifeq ($(TARGET),x64)
 	LD=x86_64-elf-ld
 	CFLAGS= -O2 -nostdlib -fno-builtin -Wall -Wextra -I./include -Dx64
 	CXXFLAGS= -O2 -nostdlib -fno-builtin -Wall -Wextra -I./include -Dx64
-	LDFLAGS=-Tx86_64.ld
+	LDFLAGS=-Tarch/$(TARGET)/x86_64.ld
 	ASFLAGS=-felf64 -Ox -Dx64
 endif
 

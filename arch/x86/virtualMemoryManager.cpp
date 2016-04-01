@@ -6,7 +6,6 @@
 #include <toyOS/bootTerminal.hpp>
 #include <toyOS/panic.hpp>
 
-static bool usingPAE();
 //static std::uint32_t readCR0();
 //static void writeCR0(std::uint32_t);
 //static bool usingPSE();
@@ -19,7 +18,7 @@ void virtualMemoryManager::init()
 std::size_t virtualMemoryManager::allocInKernelSpace(void* va, std::size_t size)
 {
     std::size_t actuallyAllocated = 0;
-    if(usingPAE())
+    if(/*usingPAE()*/false)
     {
         ;
     }
@@ -77,14 +76,6 @@ void virtualMemoryManager::deAllocInKernelSpace(void* va, std::size_t size)
     return;
 }   // check through this, written quinkly
 
-
-static bool usingPAE()
-{
-    std::uint32_t CR4;
-    asm volatile ( "mov %%cr4, %0"
-                  : "=r"(CR4) );
-    return (CR4 & (1<<5));
-}
 
 /*static bool usingPSE()
 {

@@ -1,3 +1,4 @@
+/* note: taken from PDCLIB, thanks for this great library */
 
 #include <cstring>
 namespace std
