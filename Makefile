@@ -2,15 +2,13 @@
 
 TARGET=x86
 
-PROJDIRS:=kernel lib arch
-
+PROJDIRS:=kernel lib arch/$(TARGET)
 
 CSOURCES=$(shell find $(PROJDIRS) -mindepth 1 -name "*.c")
-#CSOURCES=$(shell find -name *.c)
 COBJECTS=$(patsubst %.c, %.o, $(CSOURCES))
 CXXSOURCES=$(shell find $(PROJDIRS) -mindepth 1 -name "*.cpp")
 CXXOBJECTS=$(patsubst %.cpp, %.o, $(CXXSOURCES))
-SSOURCES=$(shell find -name *.s)
+SSOURCES=$(shell find $(PROJDIRS) -mindepth 1 -name "*.s")
 SOBJECTS=$(patsubst %.s, %.o, $(SSOURCES))
 
 ifeq ($(TARGET),x86)
@@ -55,8 +53,8 @@ updateinitrd:
 	@rm -f initrd
 
 update:
-	#@echo Updating floppy image
-	#(cd scripts; ./update_floppy.sh)
+	@#@echo Updating floppy image
+	@#(cd scripts; ./update_floppy.sh)
 	@echo Updating iso
 	mkdir -p isodir/boot/grub
 	cp kernel.bin isodir/boot/kernel.bin
@@ -70,6 +68,7 @@ strip:
 clean:
 	@echo Removing object files
 	@-rm -f $(COBJECTS) $(CXXOBJECTS) $(SOBJECTS) kernel.bin bochsout.txt
+	@rm -r isodir
 
 link:
 	@echo Linking
@@ -79,7 +78,7 @@ link:
 	@echo Assembling $<
 	@nasm $(ASFLAGS) $<
 
-.c.o:	
+.c.o:
 	@echo Compiling $<
 	@$(CC) $(CFLAGS) -o $@ -c $<
 

@@ -1,4 +1,3 @@
-%ifdef x86
 
 global loader           ; making entry point visible to linker
 extern kmain            ; kmain is defined elsewhere
@@ -208,5 +207,3 @@ stack:  resb STACKSIZE                       ; reserve 16k stack on a doubleword
 alignb 4096
 _kernel_pd:            resb 0x1000
 _kernel_page_tables:   resb 0x100000 ; I am creating 256 page tables here
-
-%endif	; x86
