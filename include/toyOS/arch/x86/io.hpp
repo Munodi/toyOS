@@ -1,15 +1,16 @@
-#ifndef _ARCH_X86_IO_H_
-#define _ARCH_X86_IO_H_
+#pragma once
+
+#include <cstdint>
 
 static inline
-void outb( unsigned short port, unsigned char val )
+void outb( unsigned short port, std::uint8_t val )
 {
     asm volatile( "outb %0, %1"
                   : : "a"(val), "Nd"(port) );
 }
 
 static inline
-void out8( unsigned short port, unsigned char val )
+void out8( unsigned short port, std::uint8_t val )
 {
     asm volatile( "outb %0, %1"
                   : : "a"(val), "Nd"(port) );
@@ -17,6 +18,15 @@ void out8( unsigned short port, unsigned char val )
 
 static inline
 unsigned char inb( unsigned short port )
+{
+    unsigned char ret;
+    asm volatile( "inb %1, %0"
+                  : "=a"(ret) : "Nd"(port) );
+    return ret;
+}
+
+static inline
+unsigned char in8( unsigned short port )
 {
     unsigned char ret;
     asm volatile( "inb %1, %0"
@@ -33,4 +43,3 @@ void io_wait( void )
                   : : "a"(0) );
 }
 
-#endif /*_ARCH_X86_IO_H_ */
