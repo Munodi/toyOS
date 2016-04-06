@@ -16,7 +16,7 @@ ifeq ($(TARGET),x86)
 	CXX=~/opt/cross/bin/i686-elf-g++
 	LD=~/opt/cross/bin/i686-elf-ld
 	CFLAGS= -O2 -I./include -nostdlib -fno-builtin -Wall -Wextra -Dx86
-	CXXFLAGS= -O2 -I./include -nostdlib -fno-builtin -Wall -Wextra -fno-exceptions -fno-rtti -Dx86
+	CXXFLAGS= -O2 -I./include -nostdlib -fno-builtin -Wall -Wextra -Wconversion -fno-exceptions -fno-rtti -Dx86 -std=gnu++11
 	LDFLAGS=-Tarch/$(TARGET)/i686.ld
 	ASFLAGS=-felf32 -Ox -Dx86
 endif
@@ -68,7 +68,7 @@ strip:
 clean:
 	@echo Removing object files
 	@-rm -f $(COBJECTS) $(CXXOBJECTS) $(SOBJECTS) kernel.bin bochsout.txt
-	@rm -r isodir
+	@-rm -r isodir
 
 link:
 	@echo Linking

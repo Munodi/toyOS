@@ -31,7 +31,7 @@ static bool         grow(std::size_t size);     // grows the heap at least size 
 
 void kernelHeap::init()
 {
-    virtualMemoryAllocated = virtualMemoryManager::allocInKernelSpace((void*)startOfRegion, kernelHeap::minimumSize);
+    virtualMemoryAllocated = VirtualMemoryManager::allocInKernelSpace((void*)startOfRegion, kernelHeap::minimumSize);
     zoneHeader* head = (zoneHeader*)KERNEL_HEAP_START;
     head->prev = NULL;
     head->next = NULL;
@@ -122,10 +122,10 @@ static bool grow(std::size_t size)
 
     if(virtualMemoryAllocated + size >= maximumHeapSize or size > maximumHeapSize)  // second check is in case firts overflows as size is to big, should never happen with all normal sized allocations
         return false;
-    std::size_t allocatedNow = virtualMemoryManager::allocInKernelSpace((void*)(KERNEL_HEAP_START + virtualMemoryAllocated), size);
+    std::size_t allocatedNow = VirtualMemoryManager::allocInKernelSpace((void*)(KERNEL_HEAP_START + virtualMemoryAllocated), size);
     if(allocatedNow < size) // if unable to allocate enough space, dealloce space it allocated and return NULL
     {
-        virtualMemoryManager::deAllocInKernelSpace((void*)(KERNEL_HEAP_START + virtualMemoryAllocated), allocatedNow);
+        VirtualMemoryManager::deAllocInKernelSpace((void*)(KERNEL_HEAP_START + virtualMemoryAllocated), allocatedNow);
         return NULL;
     }
     virtualMemoryAllocated = virtualMemoryAllocated + allocatedNow; // if no problem increase heap size

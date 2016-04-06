@@ -11,6 +11,12 @@ FLAGS       equ  MODULEALIGN | MEMINFO  ; this is the Multiboot 'flag' field
 MAGIC       equ    0x1BADB002           ; 'magic number' lets bootloader find the header
 CHECKSUM    equ -(MAGIC + FLAGS)        ; checksum required
 
+MAGIC2		equ		0xe85250d6			; Multiboot2 header magic number
+ARCHITECTURE	equ 0					; i386 protected mode = 0
+HEADER_LENGTH	equ MultiBoot2HeaderEnd - MultiBoot2Header
+CHECKSUM2	equ		0x100000000 - (MAGIC2 + ARCHITECTURE + HEADER_LENGTH)
+EAX_MAGIC2	equ		0x36d76289			; Multiboot2 EAX state
+
 ; reserve initial kernel stack space
 STACKSIZE equ 0x4000                    ; that's 16k.
 
@@ -19,6 +25,22 @@ STACKSIZE equ 0x4000                    ; that's 16k.
 %define VIRTUAL_OFFSET 0xC0000000
  
 SECTION .text
+align 8
+MultiBoot2Header:
+	dd MAGIC2
+	dd ARCHITECTURE
+	dd HEADER_LENGTH
+	dd CHECKSUM2
+	
+	; add header tags here as needed
+	
+	dw 0
+	dw 0
+	dd 8
+	
+MultiBoot2HeaderEnd:
+
+
 align 8
 MultiBootHeader:
    dd MAGIC
@@ -31,9 +53,14 @@ loader:
     mov edx, 0x2badb002
     cmp eax, edx
     je correct_multiboot
+    
+    cmp eax, EAX_MAGIC2
+    je correct_multiboot2
+    
+    xchg bx, bx
    
    ; this runs only if eax does not have the magic info number
-    mov esi, no_magic_str ;incorrect
+    mov esi, no_magic_str - VIRTUAL_OFFSET ;incorrect
     mov edi, 0xB8000
     cld
     mov ecx, 14
@@ -72,6 +99,7 @@ loader:
    
     mov ebx, mbi	; move new mbi to ebx so it is passed to kmain by the upcoming push ebx
    
+	correct_multiboot2:
     xchg bx, bx
    
     mov esp, stack+STACKSIZE-VIRTUAL_OFFSET     ; set up the stack at
@@ -192,9 +220,8 @@ init_boot_paging_ia32:
 ret
    
    
-SECTION .data
-video_ptr dd 0xB8001
-no_magic_str db 'e', 7, 0x0F, 'r', 0x0F, 'r', 'o', 0x0F, 'r', 0x0F, ':', 0x0F, '1', 0x0F, 0x0
+SECTION .rodata
+no_magic_str db 'e', 0x0F, 'r', 0x0F, 'r', 0x0F, 'o', 0x0F, 'r', 0x0F, ':', 0x0F, '1', 0x0F, 0x0
 
  
 SECTION .bss

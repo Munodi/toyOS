@@ -1,20 +1,21 @@
 /*
-  pmm.hpp (c) George Robertson 2011
+  pmm.hpp (c) George Robertson 2016
 
 */
 
-#ifndef _TOYOS_PMM_HPP_
-#define _TOYOS_PMM_HPP_
+#pragma once
 
 #include <cstdlib>
 #include <cstdint>
 #include <toyOS/multiboot.h>
+#include <toyOS/multiboot2.hpp>
 #include <toyOS/types.hpp>
 
 class physicalMemoryManager
 {
     public:
         static void init(multiboot_info_t *mbi);
+        static void init(Multiboot2BootInfo *mbi2, std::uint32_t mbi2Phys);
         // returns max memory allowed for in implementation of manager
         static std::uint64_t getMaximumMemory();
         // returns usable memory in system
@@ -33,4 +34,3 @@ class physicalMemoryManager
 
 };
 
-#endif /* _TOYOS_PMM_HPP_ */
