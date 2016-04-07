@@ -7,6 +7,7 @@
 isodir
 *.iso
 *.img
+*.d
 
 # Output log files #
 ####################
