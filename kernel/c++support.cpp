@@ -25,15 +25,15 @@
 #include <cstdint>
 #include <cstddef>
 
-using namespace std;
+
 extern kernelHeap primaryHeap;
 
 // Required for G++ to link static init/destructors.
 void *__dso_handle;
 
 // Defined in the linker.
-uintptr_t start_ctors;
-uintptr_t end_ctors;
+std::uintptr_t start_ctors;
+std::uintptr_t end_ctors;
 
 /// Calls the constructors for all global objects.
 /// Call this before using any global objects.
@@ -42,8 +42,8 @@ void initialiseConstructors()
   // Constructor list is defined in the linker script.
   // The .ctors section is just an array of function pointers.
   // iterate through, calling each in turn.
-  uintptr_t *iterator = reinterpret_cast<uintptr_t*>(&start_ctors);
-  while (iterator < reinterpret_cast<uintptr_t*>(&end_ctors))
+  std::uintptr_t *iterator = reinterpret_cast<std::uintptr_t*>(&start_ctors);
+  while (iterator < reinterpret_cast<std::uintptr_t*>(&end_ctors))
   {
     void (*fp)(void) = reinterpret_cast<void (*)(void)>(*iterator);
     fp();
@@ -71,29 +71,16 @@ extern "C" void __cxa_guard_release()
   // TODO
 }
 
+
+void *operator new (std::size_t size) throw()
+{
+	return kernelHeap::malloc(size);
+}
+void *operator new[] (std::size_t size) throw()
+{
+	return kernelHeap::malloc(size);
+}
 /*
-void *operator new (size_t size) throw()
-{
-#if defined(X86_COMMON) || defined(MIPS_COMMON) || defined(PPC_COMMON)
-  g_MallocLock.acquire();
-  void *ret = malloc(size);
-  g_MallocLock.release();
-  return ret;
-#else
-  return 0;
-#endif
-}
-void *operator new[] (size_t size) throw()
-{
-#if defined(X86_COMMON) || defined(MIPS_COMMON) || defined(PPC_COMMON)
-  g_MallocLock.acquire();
-  void *ret = malloc(size);
-  g_MallocLock.release();
-  return ret;
-#else
-  return 0;
-#endif
-}
 void *operator new (size_t size, void* memory) throw()
 {
   return memory;
@@ -101,23 +88,16 @@ void *operator new (size_t size, void* memory) throw()
 void *operator new[] (size_t size, void* memory) throw()
 {
   return memory;
-}
+}*/
 void operator delete (void * p)
 {
-#if defined(X86_COMMON) || defined(MIPS_COMMON) || defined(PPC_COMMON)
-  g_MallocLock.acquire();
-  free(p);
-  g_MallocLock.release();
-#endif
+	kernelHeap::free(p);
 }
 void operator delete[] (void * p)
 {
-#if defined(X86_COMMON) || defined(MIPS_COMMON) || defined(PPC_COMMON)
-  g_MallocLock.acquire();
-  free(p);
-  g_MallocLock.release();
-#endif
+	kernelHeap::free(p);
 }
+/*
 void operator delete (void *p, void *q)
 {
   // TODO

@@ -16,6 +16,8 @@ static const std::uintptr_t startOfRegion = KERNEL_HEAP_START;
 static std::size_t virtualMemoryAllocated = 0;
 const std::size_t maximumHeapSize = (KERNEL_HEAP_END - KERNEL_HEAP_START);
 
+const std::size_t MINIMUM_ALIGNMENT = 8;
+
 struct zoneHeader
 {
     std::size_t zoneSize;
@@ -46,18 +48,21 @@ void kernelHeap::init()
 
 void* kernelHeap::malloc(std::size_t size)
 {
+    // round size up to MINIMUM_ALIGNMENT
+    size = (size + MINIMUM_ALIGNMENT - 1) & ~(MINIMUM_ALIGNMENT - 1);
+
     zoneHeader* header = findZone(size);
     if(header != NULL)
     {
         void* pointer = (void*)header;
-        pointer = pointer + sizeof(zoneHeader);
+        pointer = (void*)((std::uint8_t*)pointer + sizeof(zoneHeader));
         return pointer;
     }
     if(grow(size))
     {
         header = findZone(size);
         void* pointer = (void*)header;
-       pointer = pointer + sizeof(zoneHeader);
+       pointer = (void*)((std::uint8_t*)pointer + sizeof(zoneHeader));
        return pointer;
     }
     return NULL;
@@ -65,52 +70,77 @@ void* kernelHeap::malloc(std::size_t size)
 
 void kernelHeap::free(void* address)
 {
-    zoneHeader* header = (zoneHeader*)((std::uintptr_t)address - sizeof(zoneHeader));
-    header->used = 0;
-    unify(header);
+    if(address) // if not NULL
+    {
+        zoneHeader* header = (zoneHeader*)((std::uintptr_t)address - sizeof(zoneHeader));
+        header->used = 0;
+        unify(header);
+    }
     return;
 }
 
 static void unify(zoneHeader* header)
 {
-    if(header->used == 0 and header->next != NULL and header->next->used == 0)  // unify right
+    if(header->next and header->next->used == 0)    // unify right
     {
         header->zoneSize = header->zoneSize + sizeof(zoneHeader) + header->next->zoneSize;
         header->next = header->next->next;
-        if(header->next != NULL)
+        if(header->next)    // if now not at the last zone, set next's header's prev pointer
             header->next->prev = header;    // should draw some diagrams
     }
-    ;   // unify left code goes here
+    if(header->prev and header->prev->used == 0)    // unify left
+    {
+        zoneHeader *previous = header->prev;
+
+        previous->zoneSize = previous->zoneSize + sizeof(zoneHeader) + header->zoneSize;
+        previous->next = header->next;
+        if(header->next)    // if *header is not the last zone, set the next zoneHeader's prev pointer
+            header->next->prev = previous;
+    }
 }
 
 static void split(zoneHeader* header, std::size_t size)
 {
+    // Create next zone after the space used by this allocation
     zoneHeader* nextHeader;
-    nextHeader = (zoneHeader*)((std::size_t)header + sizeof(zoneHeader) + size);
+    nextHeader = (zoneHeader*)((std::uint8_t*)header + sizeof(zoneHeader) + size);
     nextHeader->next = header->next;
     nextHeader->prev = header;
-    nextHeader->zoneSize = (std::size_t)nextHeader->next - (std::size_t)nextHeader + sizeof(zoneHeader);
+    // 2016 I don't think this will work when splitting the last zone, the line after should fix it
+    //nextHeader->zoneSize = (std::size_t)nextHeader->next - (std::size_t)nextHeader + sizeof(zoneHeader);
+    nextHeader->zoneSize = header->zoneSize - size - sizeof(zoneHeader);
     nextHeader->used = 0;
+
+    // Add nextHeader to the linked list, note the order of these lines is important otherwise nextHeader->prev is set to nextHeader
+    if(header->next)
+        header->next->prev = nextHeader;
     header->next = nextHeader;
+    
     header->zoneSize = size;
     return;
 }
 
 static zoneHeader* findZone(std::size_t size)
 {
-    while(size%8 != 0)
-        ++size;
     zoneHeader* header = (zoneHeader*)KERNEL_HEAP_START;
 
     for(;;)
     {
         if(header->used == 0 and header->zoneSize >= size)   // success! found usable zone
         {
-            if(size > header->zoneSize + sizeof(zoneHeader) + 16)   // split only if left over chunk will fit 16 bytes
+            if(header->zoneSize >= size + sizeof(zoneHeader) + MINIMUM_ALIGNMENT)   // split only if left over chunk will fit another zone note fixed in 2016
                 split(header, size);
             header->used = 1;
             return header;
         }
+        else if(header->next == NULL)	// new code, might fix bug
+        {
+        	return NULL;
+        }
+        else
+        {
+        	header = header->next;
+        }	// end new code
 
     }
 }
@@ -143,6 +173,7 @@ static bool grow(std::size_t size)
     else    // else last is used and should create new zone
     {
         header->next = (header + sizeof(zoneHeader) + header->zoneSize);    // point old last zoneHeader to new zone we are about to create
+        // note in 2016: won't work references unallocated memory
         zoneHeader* previousHeader = header;
         header = header->next;
         header->next = NULL;

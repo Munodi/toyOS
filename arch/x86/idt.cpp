@@ -4,6 +4,7 @@
 #include <toyOS/arch/x86/idt.hpp>
 #include <toyOS/arch/x86/PIC.hpp>
 #include <toyOS/arch/x86/io.hpp>
+#include <toyOS/arch/x86/asm.hpp>
 #include <toyOS/irqHandler.hpp>
 
 struct IdtEntry
@@ -113,6 +114,12 @@ extern "C" void isrHandler(const Registers *r)
 	{
 		bootTerminal::prints("caught interrupt: ");
 		bootTerminal::print10(r->intNo);
+		if(r->intNo == 14)
+		{	bootTerminal::prints(" EIP= ");
+			bootTerminal::print10(r->eip);
+			bootTerminal::prints(" CR2= ");
+			bootTerminal::print10(readCR2());
+		}
 		bootTerminal::printc('\n');
 	}
 	

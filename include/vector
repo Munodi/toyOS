@@ -10,17 +10,60 @@ namespace std
         public:
             explicit vector()
             {
-                _reservedSpace = NULL;
+                _reservedSpace = nullptr;
                 reserved = 0;
                 allocated = 0;
             }
             explicit vector(std::size_t n, const T& value= T());
-
+            
+            ~vector()
+            {
+            	delete[] _reservedSpace;
+            }
+			
+			bool empty() const
+			{
+				return size == 0;
+			}
+			
+			size_t size() const
+			{
+				return size;
+			}
+			
+			size_t capacity() const
+			{
+				return reserved;
+			}
+			
             void reserve(std::size_t size)
             {
-                if(size <= reserved)    return;
-                T* newRegion = new T[size];
-                // TODO finish
+                if(size > reserved)
+                {
+                	T* newRegion = new T[size];
+                	for(size_t i = 0; i < allocated; ++i)
+                		newRegion[i] = _reservedSpace[i];
+                	reserved = size;
+                	delete[] _reservedSpace;
+                	_reservedSpace = newRegion;
+                }
+            }
+            
+            void push_back(const T& value)
+            {
+            	if(allocated == reserved)
+            		reserve(reserved * 3 / 2 + 1);
+            	_reservedSpace[allocated++] = value;
+            }
+            
+            const T& operator[](size_t pos) const
+            {
+            	return _reservedSpace[pos];
+            }
+            
+            T& operator[](size_t pos)
+            {
+            	return _reservedSpace[pos];
             }
 
 

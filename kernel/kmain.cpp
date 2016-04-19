@@ -6,14 +6,16 @@
 #include <cstdlib>
 #include <cstdint>
 #include <cstring>
+#include <toyOS/initrd.hpp>
 #include <toyOS/memoryLayout.hpp>
 #include <toyOS/bootTerminal.hpp>
 #include <toyOS/arch/x86/gdt.hpp>
 #include <toyOS/interruptManager.hpp>
-#include <toyOS/arch/x86/controlRegisters.hpp>
 #include "c++support.hpp"
 #include <toyOS/arch/x86/ACPI.hpp>
 #include <toyOS/arch/x86/asm.hpp>
+
+Initrd initrd;
 
 void callConstructors();
 void print_multiboot_info(multiboot_info_t *mbi);
@@ -80,6 +82,33 @@ extern "C" void kmain(std::uint32_t magic, std::uint32_t mbiAddr)	// EAX and EBX
 
     findRSDP();
 	initIdt();
+	
+	{
+		Multiboot2Tag_module* moduleTag = nullptr;
+		for(Multiboot2Tag* tag = mbi2->tags;
+		tag->type != MULTIBOOT2_TAG_TYPES::END;
+		tag = (Multiboot2Tag*) ((std::uint8_t*)tag + (tag->size + 7 & ~7)))
+		{
+			if(tag->type == MULTIBOOT2_TAG_TYPES::MODULE)
+			{
+				moduleTag = (Multiboot2Tag_module*)tag;
+			}
+		}
+		if(moduleTag)
+		{
+			std::size_t pagesLength = (moduleTag->mod_end - moduleTag->mod_start + 4095) / 4096;
+			void* moduleVirtual = VirtualMemoryManager::addAfterKernel(moduleTag->mod_start);
+			for(std::size_t i = 1; i < pagesLength; ++i)
+				VirtualMemoryManager::addAfterKernel(moduleTag->mod_start + i * 4096);
+			initrd = Initrd(moduleVirtual, moduleTag->mod_end - moduleTag->mod_start, moduleTag->string);
+		}
+		else
+		{
+			bootTerminal::prints("Fatal error: No initrd");
+			return;
+		}
+	}
+	initrd.debug();
 	
     //interruptManager::init();
 
@@ -170,9 +199,9 @@ void print_multiboot2_info(Multiboot2BootInfo *mbi2)
     		Multiboot2Tag_module* tagmod = (Multiboot2Tag_module*)tag;
     		bootTerminal::prints("mod_start: ");
     		bootTerminal::print10(tagmod->mod_start);
-    		bootTerminal::prints("mod_end: ");
+    		bootTerminal::prints(", mod_end: ");
     		bootTerminal::print10(tagmod->mod_end);
-    		bootTerminal::prints("string: ");
+    		bootTerminal::prints(", string: ");
     		bootTerminal::prints(tagmod->string);
     		bootTerminal::printc('\n');
     	}

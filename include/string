@@ -1,38 +1,88 @@
-/* 
- * Copyright (c) 2011 George Robertson
- * 
- * Permission is hereby granted, free of charge, to any person obtaining a
- * copy of this software and associated documentation files (the "Software"),
- * to deal in the Software without restriction, including without limitation
- * the rights to use, copy, modify, merge, publish, distribute, sublicense,
- * and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
- * 
- * The above copyright notice and this permission notice shall be included
- * in all copies or substantial portions of the Software.
- * 
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
- * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
- * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
- * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
- * DEALINGS IN THE SOFTWARE. 
- */
+#pragma once
 
-#ifndef _STRING_
-#define _STRING_
 #include <cstdlib>
+#include <cstring>
 
 namespace std
 {
-    class string
-    {
-        public:
-            static const size_t npos = -1;
-        
-    };
+	class string
+	{
+		public:
+			static const size_t npos = -1;
+			
+			explicit string() : _size(0), capacity(0), data(new char[1])
+			{
+				*data = '\0';
+			}
+			string(const char* s)
+			{
+				_size = strlen(s);
+				capacity = _size;
+				data = new char[capacity + 1];
+				strcpy(data, s);
+			}
+			string(const string& other)
+			{
+				_size = other._size;
+				capacity = other.capacity;
+				data = new char[capacity + 1];
+				strcpy(data, other.data);
+			}
+			string& operator=(const string& str)
+			{
+				if(this == &str)	// self-assignment check
+					return *this;
+				
+				delete[] data;
+				_size = str._size;
+				capacity = str.capacity;
+				data = new char[capacity + 1];
+				strcpy(data, str.data);
+				
+				return *this;
+			}
+			
+			~string()
+			{
+				delete[] data;
+			}
+			
+			string& append(const char* s)
+			{
+				//asm volatile("xchgw %bx, %bx");
+				size_t sLength = strlen(s);
+				// grow capacity if need be
+				if(capacity + 1 < _size + sLength + 1)
+				{
+					capacity = _size + sLength;
+					char *newData = new char[capacity + 1];
+					strcpy(newData, data);
+					delete[] data;
+					data = newData;
+				}
+				// add s to string
+				strcpy(data + _size, s);
+				_size += sLength;
+				
+				return *this;
+			}
+			
+			const char* c_str() const
+			{
+				return data;
+			}
+
+			std::size_t size() const
+			{
+				return _size;
+			}
+		private:
+			std::size_t _size, capacity;
+			char* data;
+	};
 }   // namespace std
 
-
-#endif // _STRING_
+inline bool operator==(const std::string& lhs, const std::string& rhs)
+{
+	return lhs.size() == rhs.size() && std::strcmp(lhs.c_str(), rhs.c_str()) == 0;
+}

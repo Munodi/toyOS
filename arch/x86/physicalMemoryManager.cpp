@@ -209,7 +209,27 @@ void physicalMemoryManager::init(Multiboot2BootInfo *mbi2, std::uint32_t mbi2Phy
 			freeMemory -= 4096;
 	}
 
-    // TODO: set pages that the modules are in
+	// mark pages that the module is in
+	for(Multiboot2Tag* tag = mbi2->tags;
+	tag->type != MULTIBOOT2_TAG_TYPES::END;
+	tag = (Multiboot2Tag*) ((std::uint8_t*)tag + (tag->size + 7 & ~7)))
+	{
+		if(tag->type == MULTIBOOT2_TAG_TYPES::MODULE)
+		{
+			Multiboot2Tag_module* moduleTag = (Multiboot2Tag_module*)tag;
+			for(std::uint32_t frame = moduleTag->mod_start;
+				frame < moduleTag->mod_end;
+				frame += 4096)
+			{
+				smallPageBitset.set(frame / 4096);
+				// the if is needed because the code above marks all memory less
+				// than 1mb as used, it can be removed if above code is changed
+				if(frame >= (unsigned)(&kernel_end) - 0xC0000000)
+					freeMemory -= 4096;
+			}
+			break;
+		}
+	}
 
 
     return;

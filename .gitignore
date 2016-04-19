@@ -2,12 +2,16 @@
 ###################
 *.o
 *.bin
+*.tar
 *.pyo
 *.pyc
-isodir
+isodir/
 *.iso
 *.img
 *.d
+drivers/drivers/
+servers/servers/
+servers/idle/idle
 
 # Output log files #
 ####################
