@@ -1,4 +1,3 @@
-#include <toyOS/multiboot.h>
 #include <toyOS/multiboot2.hpp>
 #include <toyOS/physicalMemoryManager.hpp>
 #include <toyOS/virtualMemoryManager.hpp>
@@ -18,52 +17,43 @@
 Initrd initrd;
 
 void callConstructors();
-void print_multiboot_info(multiboot_info_t *mbi);
 void print_multiboot2_info(Multiboot2BootInfo *mbi2);
 
 extern "C" unsigned kernel_end;
 extern void initIdt();
 extern "C" void kmain(std::uint32_t magic, std::uint32_t mbiAddr)	// EAX and EBX
 {
-	multiboot_info_t *mbi = NULL;
-	Multiboot2BootInfo *mbi2 = NULL;
+	Multiboot2BootInfo *mbi2 = nullptr;
     initialiseConstructors();
     /* paging is enabled before kmain is entered */
     bootTerminal::init();
     bootTerminal::prints("kernel default console inited\n");
-    switch(magic)
+
+    if(magic == MULTIBOOT2_BOOTLOADER_MAGIC)
     {
-    	case MULTIBOOT2_BOOTLOADER_MAGIC:
-    		mbi2 = (Multiboot2BootInfo*)VirtualMemoryManager::addAfterKernel(mbiAddr);
-    		{
-    			int bytesLeft = mbi2->total_size - (4096 - unsigned(mbi2) % 4096);
-    			unsigned pagesMapped = 1;
-    			while(bytesLeft > 0)
-    			{
-    				bochsBreak();
-    				VirtualMemoryManager::addAfterKernel(mbiAddr + 4096 * pagesMapped);
-    				++pagesMapped;
-    				bytesLeft -= 4096;
-    			}
-    		}
-    		print_multiboot2_info((Multiboot2BootInfo*)mbi2);
-    		break;
-    	case 0x2BADB002:
-    		mbi = (multiboot_info_t*)mbiAddr;
-			print_multiboot_info(mbi);
-    		break;
-    	default:
-    		bootTerminal::prints("panic: magic not 0x2BADB002\n");
-        	while(1){;}
+        mbi2 = (Multiboot2BootInfo*)VirtualMemoryManager::addAfterKernel(mbiAddr);
+        int bytesLeft = mbi2->total_size - (4096 - unsigned(mbi2) % 4096);
+        unsigned pagesMapped = 1;
+        while(bytesLeft > 0)
+        {
+            bochsBreak();
+            VirtualMemoryManager::addAfterKernel(mbiAddr + 4096 * pagesMapped);
+            ++pagesMapped;
+            bytesLeft -= 4096;
+        }
+        print_multiboot2_info(mbi2);
+    }
+    else
+    {
+        bootTerminal::prints("panic: multiboot magic incorrect\n");
+        while(1){;}
     }
 
 	//bootTerminal::prints("kernel length is ");
 	//bootTerminal::print10((unsigned)(&kernel_end) - 0xC0000000);
 	//bootTerminal::printc('\n');
 
-    if(magic == 0x2badb002)
-    	physicalMemoryManager::init(mbi);
-    else if(magic == MULTIBOOT2_BOOTLOADER_MAGIC)
+    if(magic == MULTIBOOT2_BOOTLOADER_MAGIC)
     	physicalMemoryManager::init(mbi2, mbiAddr);
     bootTerminal::prints("Physical memory manager inited\n");
 
@@ -117,51 +107,6 @@ extern "C" void kmain(std::uint32_t magic, std::uint32_t mbiAddr)	// EAX and EBX
     {
     	asm volatile("hlt");
     }
-}
-
-void print_multiboot_info(multiboot_info_t *mbi)
-{
-    char tmp[20];
-    multiboot_mmap_entry* mmap;
-    bootTerminal::prints("\nmultiboot info:\n");
-
-	if(mbi->flags & (1 << 0))
-	{
-		bootTerminal::prints("mem_lower: ");
-		bootTerminal::prints(std::utoa(mbi->mem_lower, &(tmp[0]), 10));
-		bootTerminal::prints("\n");
-		bootTerminal::prints("mem_upper: ");
-		bootTerminal::prints(std::utoa(mbi->mem_upper, &(tmp[0]), 10));
-		bootTerminal::printc('\n');
-	}
-
-	if(mbi->flags & (1 << 1))
-	{
-		bootTerminal::prints("boot_device: 0x");
-		bootTerminal::printh(mbi->boot_device);
-		bootTerminal::printc('\n');
-	}
-
-    multiboot_uint32_t numberOfMemoryMapEntries = ((mbi->mmap_length) / sizeof(multiboot_memory_map_t));
-
-    mmap = (multiboot_mmap_entry*)(mbi->mmap_addr);
-
-    for(multiboot_uint32_t i = 0; i < numberOfMemoryMapEntries; i++)
-    {
-        bootTerminal::prints("size: ");
-        bootTerminal::prints(std::utoa(mmap[i].size, &(tmp[0]), 10));
-        bootTerminal::prints(" type: ");
-        bootTerminal::prints(std::utoa(mmap[i].type, &(tmp[0]), 10));
-        bootTerminal::prints(" start: ");
-        bootTerminal::prints(std::utoa(mmap[i].addr, &(tmp[0]), 10));
-        bootTerminal::prints(" length: ");
-        bootTerminal::prints(std::utoa(mmap[i].len, &(tmp[0]), 10));
-        bootTerminal::printc('\n');
-    }
-	
-	bootTerminal::printc('\n');
-    return;
-
 }
 
 void print_multiboot2_info(Multiboot2BootInfo *mbi2)

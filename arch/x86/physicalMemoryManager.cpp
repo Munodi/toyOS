@@ -8,7 +8,6 @@
 #include <cstdlib>
 #include <cstdint>
 #include <toyOS/physicalMemoryManager.hpp>
-#include <toyOS/multiboot.h>
 #include <toyOS/multiboot2.hpp>
 #include <toyOS/types.hpp>
 #include <toyOS/bootTerminal.hpp>
@@ -65,68 +64,6 @@ std::uint64_t physicalMemoryManager::allocSmallPage()
 }
 
 extern "C" unsigned kernel_end;
-
-void physicalMemoryManager::init(multiboot_info_t *mbi)
-{
-    smallPageBitset.set();
-    largePageBitset.set();
-
-    char tmp[20];
-
-    std::uint64_t freeFrame;    // freeFrame is the address of memory area after frame aligning
-    std::int64_t bytesLeft;     // bytesLeft is the length of memory area after frame aligning
-    multiboot_mmap_entry* mmap;
-    mmap = (multiboot_mmap_entry*)(mbi->mmap_addr);
-    multiboot_uint32_t numberOfMemoryMapEntries = ((mbi->mmap_length) / sizeof(multiboot_memory_map_t));
-
-    // mark unused bits according to the memory map
-    for(multiboot_uint32_t i = 0; i < numberOfMemoryMapEntries; i++)
-    {
-        if(mmap[i].type != 1)
-            continue;
-        bytesLeft = std::int64_t(mmap[i].len);
-        freeFrame = mmap[i].addr;
-        while((freeFrame % getSmallPageSize()) != 0)
-        {
-            --bytesLeft;
-            ++freeFrame;
-        }
-        if(bytesLeft <= 0)
-            continue;       // memory area is smaller than page frame size
-        do
-        {
-            smallPageBitset.reset(freeFrame / getSmallPageSize());
-            freeFrame = freeFrame + getSmallPageSize();
-            bytesLeft = bytesLeft - getSmallPageSize();
-            systemMemory += 4096;
-            freeMemory += 4096;
-        }while(bytesLeft > 0);
-
-
-
-
-    }
-
-    // mark lower 1mb and kernel
-    {
-        std::uint32_t kernelLength = (unsigned)(&kernel_end) - 0xC0000000;
-        kernelLength = kernelLength / getSmallPageSize();
-        bootTerminal::prints(std::utoa(kernelLength, &(tmp[0]), 10));
-        bootTerminal::printc('\n');
-        for(std::uint32_t i = 0; i < kernelLength; i++)
-        {
-            smallPageBitset.set(i);
-			freeMemory -= (1 << smallPageSize);
-        }
-
-    }
-
-    // TODO: modules
-
-
-    return;
-
-}
 
 void physicalMemoryManager::init(Multiboot2BootInfo *mbi2, std::uint32_t mbi2Phys)
 {

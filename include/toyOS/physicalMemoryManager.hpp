@@ -7,14 +7,12 @@
 
 #include <cstdlib>
 #include <cstdint>
-#include <toyOS/multiboot.h>
 #include <toyOS/multiboot2.hpp>
 #include <toyOS/types.hpp>
 
 class physicalMemoryManager
 {
     public:
-        static void init(multiboot_info_t *mbi);
         static void init(Multiboot2BootInfo *mbi2, std::uint32_t mbi2Phys);
         // returns max memory allowed for in implementation of manager
         static std::uint64_t getMaximumMemory();
